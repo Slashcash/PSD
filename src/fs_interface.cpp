@@ -43,7 +43,7 @@ bool FS_Interface::evaluateDirectoryValidity(const QDir &theDir) const
 
     if(!theDir.isReadable())
     {
-        qCCritical(interfaceFs) << "Directory " << theDir.absolutePath() << "is not readable";
+        qCCritical(interfaceFs) << "Directory" << theDir.absolutePath() << "is not readable";
         return false;
     }
 

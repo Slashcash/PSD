@@ -9,11 +9,11 @@ Interface::Interface(QObject* parent) : QObject(parent)
 
 bool Interface::send(const QByteArray theMsg)
 {
-    qCInfo(interface) << "Sending " << theMsg.size() << "bytes to " << name();
+    qCInfo(interface) << "Sending" << theMsg.size() << "bytes to" << name();
 
     bool ok = sendEffective(theMsg);
 
-    if(!ok) qCCritical(interface) << "Sending to " << name() << " failed";
+    if(!ok) qCCritical(interface) << "Sending to" << name() << "failed";
 
     return ok;
 }
