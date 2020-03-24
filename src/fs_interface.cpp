@@ -11,8 +11,9 @@ const QString FS_Interface::fileExtension = ".bin";
 
 FS_Interface::FS_Interface(const QDir& theSndDir, const QDir& theRcvDir) : Interface()
 {
-    evaluateDirectoryValidity(theSndDir);
-    evaluateDirectoryValidity(theRcvDir);
+    bool result = true;
+
+    result = evaluateDirectoryValidity(theSndDir) | evaluateDirectoryValidity(theRcvDir);
 
     sndDir = theSndDir;
     rcvDir = theRcvDir;
@@ -25,8 +26,13 @@ FS_Interface::FS_Interface(const QDir& theSndDir, const QDir& theRcvDir) : Inter
     rcvDir.setNameFilters(QStringList() << filePrefix + "*" + fileExtension);
     rcvDir.setSorting(QDir::SortFlag::Name);
 
-    connect(&timer, &QTimer::timeout, this, &FS_Interface::onTimeout);
-    timer.start(pollingTimer);
+    if(result)
+    {
+        connect(&timer, &QTimer::timeout, this, &FS_Interface::onTimeout);
+        timer.start(pollingTimer);
+    }
+
+    emit operationEnded(OperationType::INITIALIZE, result);
 }
 
 bool FS_Interface::evaluateDirectoryValidity(const QDir &theDir) const

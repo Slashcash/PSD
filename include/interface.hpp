@@ -9,17 +9,32 @@ class Interface : public QObject
 Q_OBJECT
 
 public:
+    enum class OperationType
+    {
+        INITIALIZE = 0,
+        SEND,
+    };
+
     Interface(QObject* parent = nullptr);
 
     virtual bool send(const QByteArray theMsg) final;
     virtual QString name() const = 0;
 
 signals:
-    virtual void msgReceived(const QByteArray& theMsg) final;
+    virtual void msgReceived(const QByteArray& theMsg) const final;
+    virtual void operationStarted(const OperationType& theOperationType) const final;
+    virtual void operationEnded(const OperationType& theOperationType, const bool theResult) const final;
+    virtual void initializeOperationStarted() const final;
+    virtual void initializeOperationEnded(const bool theResult) const final;
+    virtual void sendOperationStarted() const final;
+    virtual void sendOperationEnded(const bool theResult) const final;
+
     void msgReceivedEffective(const QByteArray& theMsg);
 
 private slots:
-    void onMsgReceived(const QByteArray& theMsg);
+    virtual void onMsgReceived(const QByteArray& theMsg) final;
+    virtual void onOperationStarted(const OperationType& theOperationType) const final;
+    virtual void onOperationEnded(const OperationType& theOperationType, const bool theResult) const final;
 
 private:
     virtual bool sendEffective(const QByteArray& theMsg) = 0;
