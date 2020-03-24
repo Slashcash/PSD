@@ -15,10 +15,13 @@ public:
         SEND,
     };
 
+    Interface(const Interface& theInterface) = delete;
     Interface(QObject* parent = nullptr);
 
     virtual bool send(const QByteArray theMsg) final;
     virtual QString name() const = 0;
+
+    Interface& operator=(const Interface& theInterface) = delete;
 
 signals:
     virtual void msgReceived(const QByteArray& theMsg) const final;
