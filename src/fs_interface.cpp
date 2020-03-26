@@ -1,5 +1,7 @@
 #include "fs_interface.hpp"
 
+#include <QThread>
+
 #include "log.hpp"
 
 const QString FS_Interface::defaultDirName = "psd_fs_interface";
@@ -9,14 +11,15 @@ const QString FS_Interface::defaultRcvDirName = "rcv";
 const QString FS_Interface::filePrefix = "packet_";
 const QString FS_Interface::fileExtension = ".bin";
 
-FS_Interface::FS_Interface(const QDir& theSndDir, const QDir& theRcvDir) : Interface()
+FS_Interface::FS_Interface(const QString& theFolderPath) : Interface()
 {
+    basePath = theFolderPath;
     bool result = true;
 
-    result = evaluateDirectoryValidity(theSndDir) | evaluateDirectoryValidity(theRcvDir);
+    sndDir.setPath(theFolderPath + "/" + defaultDirName + "/" + defaultSndDirName);
+    rcvDir.setPath(theFolderPath + "/" + defaultDirName + "/" + defaultRcvDirName);
 
-    sndDir = theSndDir;
-    rcvDir = theRcvDir;
+    result = evaluateDirectoryValidity(sndDir) | evaluateDirectoryValidity(rcvDir);
 
     sndDir.setFilter(QDir::Filter::Files | QDir::Filter::Readable | QDir::Filter::NoDotAndDotDot);
     sndDir.setNameFilters(QStringList() << "*.bin");
@@ -31,8 +34,6 @@ FS_Interface::FS_Interface(const QDir& theSndDir, const QDir& theRcvDir) : Inter
         connect(&timer, &QTimer::timeout, this, &FS_Interface::onTimeout);
         timer.start(pollingTimer);
     }
-
-    emit operationEnded(OperationType::INITIALIZE, result);
 }
 
 bool FS_Interface::evaluateDirectoryValidity(const QDir &theDir) const
@@ -60,6 +61,7 @@ bool FS_Interface::sendEffective(const QByteArray& theMsg)
 {
     unsigned int fileNumber;
 
+    sndDir.refresh();
     QStringList fileList = sndDir.entryList();
 
     if(fileList.empty()) fileNumber = 1;
@@ -96,6 +98,7 @@ bool FS_Interface::sendEffective(const QByteArray& theMsg)
     if(writtenSize != theMsg.size() || writtenSize == -1)
     {
         qCCritical(interfaceFs) << "Error in writing" << filePath;
+        file.close();
         return false;
     }
 
@@ -105,6 +108,7 @@ bool FS_Interface::sendEffective(const QByteArray& theMsg)
 
 void FS_Interface::onTimeout()
 {
+    rcvDir.refresh();
     QStringList newFileList = rcvDir.entryList();
     for(auto it : newFileList)
     {
@@ -128,7 +132,5 @@ void FS_Interface::onTimeout()
 
 QString FS_Interface::name() const
 {
-    QDir parentDir = rcvDir;
-    parentDir.cdUp();
-    return parentDir.absolutePath();
+    return basePath;
 }

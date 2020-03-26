@@ -11,8 +11,12 @@ Q_OBJECT
 public:
     enum class OperationType
     {
-        INITIALIZE = 0,
-        SEND,
+        SEND = 0
+    };
+
+    enum class InterfaceType
+    {
+        FILESYSTEM = 0
     };
 
     Interface(const Interface& theInterface) = delete;
@@ -20,17 +24,16 @@ public:
 
     virtual bool send(const QByteArray theMsg) final;
     virtual QString name() const = 0;
+    virtual InterfaceType type() const = 0;
 
     Interface& operator=(const Interface& theInterface) = delete;
 
 signals:
-    virtual void msgReceived(const QByteArray& theMsg) const final;
-    virtual void operationStarted(const OperationType& theOperationType) const final;
-    virtual void operationEnded(const OperationType& theOperationType, const bool theResult) const final;
-    virtual void initializeOperationStarted() const final;
-    virtual void initializeOperationEnded(const bool theResult) const final;
-    virtual void sendOperationStarted() const final;
-    virtual void sendOperationEnded(const bool theResult) const final;
+    void msgReceived(const QByteArray& theMsg) const;
+    void operationStarted(const OperationType& theOperationType) const;
+    void operationEnded(const OperationType& theOperationType, const bool theResult) const;
+    void sendOperationStarted() const;
+    void sendOperationEnded(const bool theResult) const;
 
     void msgReceivedEffective(const QByteArray& theMsg);
 

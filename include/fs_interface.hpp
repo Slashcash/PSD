@@ -12,10 +12,10 @@ class FS_Interface : public Interface
 Q_OBJECT
 
 public:
-    explicit FS_Interface(const QDir& theSndDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" + defaultDirName + "/" + defaultSndDirName,
-                           const QDir& theRcvDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" + defaultDirName + "/" + defaultRcvDirName);
+    explicit FS_Interface(const QString& theFolderPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
 
     QString name() const;
+    InterfaceType type() const { return InterfaceType::FILESYSTEM; }
 
 private slots:
     void onTimeout();
@@ -30,10 +30,11 @@ private:
 
     static constexpr int pollingTimer = 300;
 
-    QDir rcvDir;
     QDir sndDir;
+    QDir rcvDir;
     QTimer timer;
     QStringList fileCache;
+    QString basePath;
 
     bool evaluateDirectoryValidity(const QDir& theDir) const;
     virtual bool sendEffective(const QByteArray& theMsg);

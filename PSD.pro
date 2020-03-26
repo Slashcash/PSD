@@ -19,7 +19,8 @@ SOURCES += \
     src/fs_interface.cpp \
     src/interface.cpp \
     src/log.cpp \
-    src/main.cpp
+    src/main.cpp \
+    src/manager.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -29,4 +30,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     include/fs_interface.hpp \
     include/interface.hpp \
-    include/log.hpp
+    include/log.hpp \
+    include/manager.hpp

@@ -8,7 +8,7 @@ Interface::Interface(QObject* parent) : QObject(parent)
     connect(this, &Interface::operationStarted, this, &Interface::onOperationStarted);
     connect(this, &Interface::operationEnded, this, &Interface::onOperationEnded);
 
-    emit operationStarted(OperationType::INITIALIZE);
+    qCInfo(interface) << "Starting interface initialization";
 }
 
 bool Interface::send(const QByteArray theMsg)
@@ -35,11 +35,6 @@ void Interface::onOperationStarted(const OperationType& theOperationType) const
 {
     switch(theOperationType)
     {
-        case OperationType::INITIALIZE:
-        {
-            emit initializeOperationStarted();
-        }
-        break;
         case OperationType::SEND:
         {
             emit sendOperationStarted();
@@ -49,6 +44,7 @@ void Interface::onOperationStarted(const OperationType& theOperationType) const
         {
             qCWarning(interface) << "Unhandled operation type started";
         }
+        break;
     }
 }
 
@@ -56,11 +52,6 @@ void Interface::onOperationEnded(const OperationType& theOperationType, const bo
 {
     switch(theOperationType)
     {
-        case OperationType::INITIALIZE:
-        {
-            emit initializeOperationEnded(theResult);
-        }
-        break;
         case OperationType::SEND:
         {
             emit sendOperationEnded(theResult);
@@ -70,5 +61,6 @@ void Interface::onOperationEnded(const OperationType& theOperationType, const bo
         {
             qCWarning(interface) << "Unhandled operation type ended";
         }
+        break;
     }
 }
