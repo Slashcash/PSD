@@ -26,7 +26,6 @@ FS_Interface::FS_Interface(const QString& theFolderPath) : Interface()
     sndDir.setSorting(QDir::SortFlag::Name);
 
     rcvDir.setFilter(QDir::Filter::Files | QDir::Filter::Readable | QDir::Filter::NoDotAndDotDot);
-    rcvDir.setNameFilters(QStringList() << filePrefix + "*" + fileExtension);
     rcvDir.setSorting(QDir::SortFlag::Name);
 
     if(result)

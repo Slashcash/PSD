@@ -2,6 +2,7 @@
 
 #include "fs_interface.hpp"
 #include "log.hpp"
+#include "base_packet.hpp"
 
 Manager::Manager(QObject* parent) : QObject(parent)
 {
@@ -11,6 +12,9 @@ Manager::Manager(QObject* parent) : QObject(parent)
 void Manager::onMsgReceived(const QByteArray& theMsg)
 {
     interface->send(theMsg);
+    Base_Packet packet(theMsg);
+
+    qDebug() << static_cast<uint8_t>(packet.sourceMacAddress()[0]) /*<< packet.sourceMacAddress()*/;
 }
 
 void Manager::startScan(const Interface::InterfaceType &theType, const QString &theName)
