@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <QtEndian>
+#include <QFile>
 
 #include "log.hpp"
 
@@ -64,4 +65,25 @@ QByteArray Base_Packet::sourceMacAddress() const
 QByteArray Base_Packet::destinationMacAddress() const
 {
     return readFromSource(ethHeader, MAC_DST_POS, MAC_ADDRESS_SIZE);
+}
+
+bool Base_Packet::writeToFile(const QString& thePath) const
+{
+    QFile file(thePath);
+    if(!file.open(QIODevice::WriteOnly))
+    {
+        qCCritical(packet) << "Failed to open file" << thePath;
+        return false;
+    }
+
+    qint64 writtenSize = file.write(rawData());
+    if(writtenSize != rawData().size() || writtenSize == -1)
+    {
+        qCCritical(packet) << "Error in writing" << thePath;
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return true;
 }
