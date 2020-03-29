@@ -2,7 +2,7 @@
 
 #include "fs_interface.hpp"
 #include "log.hpp"
-#include "udp_packet.hpp"
+#include "breply_packet.hpp"
 
 Manager::Manager(QObject* parent) : QObject(parent)
 {
@@ -12,6 +12,8 @@ Manager::Manager(QObject* parent) : QObject(parent)
 void Manager::onMsgReceived(const QByteArray& theMsg)
 {
     interface->send(theMsg);
+    Breply_Packet packet(theMsg);
+    qDebug() << packet.obtainSessionKey();
 }
 
 void Manager::startScan(const Interface::InterfaceType &theType, const QString &theName)
