@@ -7,6 +7,7 @@
 #include <QTimer>
 
 #include "interface.hpp"
+#include "base_packet.hpp"
 
 class Manager : public QObject
 {

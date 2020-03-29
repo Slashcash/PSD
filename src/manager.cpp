@@ -2,6 +2,7 @@
 
 #include "fs_interface.hpp"
 #include "log.hpp"
+#include "packet.hpp"
 #include "breply_packet.hpp"
 
 Manager::Manager(QObject* parent) : QObject(parent)
@@ -11,9 +12,28 @@ Manager::Manager(QObject* parent) : QObject(parent)
 
 void Manager::onMsgReceived(const QByteArray& theMsg)
 {
-    interface->send(theMsg);
-    Breply_Packet packet(theMsg);
-    qDebug() << packet.obtainSessionKey();
+    Packet buffer(theMsg);
+    QScopedPointer<Base_Packet> msgPtr;
+    switch(buffer.evaluateType())
+    {
+        case Base_Packet::Type::NORMAL:
+        {
+            msgPtr.reset(new Packet(theMsg));
+        }
+        break;
+        case Base_Packet::Type::BREPLY:
+        {
+            msgPtr.reset(new Breply_Packet(theMsg));
+        }
+        break;
+        default:
+        {
+            msgPtr.reset(new Packet(theMsg));
+        }
+        break;
+    }
+
+    interface->send(msgPtr.get()->rawData());
 }
 
 void Manager::startScan(const Interface::InterfaceType &theType, const QString &theName)

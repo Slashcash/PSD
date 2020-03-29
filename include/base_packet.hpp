@@ -7,8 +7,16 @@
 class Base_Packet
 {
 public:
+    enum class Type
+    {
+        NORMAL,
+        BREPLY
+    };
+
     Base_Packet();
     Base_Packet(const QByteArray& theSource);
+
+    Type evaluateType();
 
     virtual QHostAddress sourceIpAddress() const final;
     virtual QHostAddress destinationIpAddress() const final;
@@ -17,6 +25,8 @@ public:
 
     virtual QByteArray rawData() const final { return header() + payload(); }
     virtual bool writeToFile(const QString& thePath) const final;
+
+    virtual ~Base_Packet() {}
 
 protected:
     virtual QByteArray readFromSource(const QByteArray& theSource, const unsigned int theStartPos, const unsigned int theSize) const final;
