@@ -1,18 +1,15 @@
 #ifndef BREPLY_PACKET_HPP
 #define BREPLY_PACKET_HPP
 
-#include "udp_packet.hpp"
+#include "packet.hpp"
 
-class Breply_Packet : public Udp_Packet
+class Breply_Packet : public Packet
 {
 public:
-    Breply_Packet() : Udp_Packet() {}
-    Breply_Packet(const QByteArray& theSource);
+    Breply_Packet() : Packet() {}
+    Breply_Packet(const QByteArray& theSource) : Packet(theSource) {}
 
     QByteArray obtainSessionKey() const;
-
-protected:
-    virtual QByteArray payload() const { return payld; }
 
 private:
     static const char* HMAC_KEY;
@@ -20,11 +17,8 @@ private:
     static const unsigned int BREPLY_CRYPTOCHALLENGE_SIZE = 58;
     static const unsigned int BREPLY_SESSIONPARAM_SIZE = 32;
 
-    QByteArray sessionParam() const { return readFromSource(payld, payloadSize() - BREPLY_CRYPTOCHALLENGE_SIZE - BREPLY_SESSIONPARAM_SIZE, BREPLY_SESSIONPARAM_SIZE); }
+    QByteArray sessionParam() const { return readFromSource(payload(), payloadSize() - BREPLY_CRYPTOCHALLENGE_SIZE - BREPLY_SESSIONPARAM_SIZE, BREPLY_SESSIONPARAM_SIZE); }
     QByteArray modifiedSessionParam() const;
-
-    QByteArray payld;
-    unsigned int payloadStart;
 };
 
 #endif // BREPLY_PACKET_HPP

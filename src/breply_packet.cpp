@@ -7,13 +7,6 @@
 
 const char* Breply_Packet::HMAC_KEY = "p1frXqxmeCZWFv0X";
 
-Breply_Packet::Breply_Packet(const QByteArray& theSource) : Udp_Packet(theSource)
-{
-    payloadStart = udpHeaderStartPos() + UDP_HEADER_SIZE;
-
-    payld = readFromSource(theSource, payloadStart, theSource.size() - payloadStart);
-}
-
 QByteArray Breply_Packet::obtainSessionKey() const
 {
     //initializing ctx

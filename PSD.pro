@@ -24,6 +24,7 @@ SOURCES += \
     src/log.cpp \
     src/main.cpp \
     src/manager.cpp \
+    src/packet.cpp \
     src/udp_packet.cpp
 
 # Default rules for deployment.
@@ -38,6 +39,7 @@ HEADERS += \
     include/interface.hpp \
     include/log.hpp \
     include/manager.hpp \
+    include/packet.hpp \
     include/udp_packet.hpp
 
 LIBS += -LC:/openssl/lib -lssl -lcrypto
