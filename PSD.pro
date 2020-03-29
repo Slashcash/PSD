@@ -22,7 +22,8 @@ SOURCES += \
     src/interface.cpp \
     src/log.cpp \
     src/main.cpp \
-    src/manager.cpp
+    src/manager.cpp \
+    src/udp_packet.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -34,4 +35,5 @@ HEADERS += \
     include/fs_interface.hpp \
     include/interface.hpp \
     include/log.hpp \
-    include/manager.hpp
+    include/manager.hpp \
+    include/udp_packet.hpp
