@@ -90,6 +90,9 @@ bool Base_Packet::writeToFile(const QString& thePath) const
 
 Base_Packet::Type Base_Packet::evaluateType()
 {
-    if(payload().at(0) == 1) return Type::BREPLY;
+    QByteArray payld = payload();
+
+    if(payld.at(0) == 1) return Type::BREPLY;
+    else if(static_cast<unsigned char>(payld.at(0)) == 0x32) return Type::PIA;
     else return Type::NORMAL;
 }

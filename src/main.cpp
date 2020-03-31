@@ -11,16 +11,12 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     Manager manager;
-    manager.startScan(Interface::InterfaceType::FILESYSTEM, QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
-    //manager.stopScan();
-
-
-    /*FS_Interface interface;
-    QByteArray a;
-    a.push_back('c');
-    interface.send(a);
-    QThread::sleep(5);
-    interface.send(a);*/
+    Manager::InjectOperation op;
+    op.interfaceName = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    op.interfaceType = Interface::InterfaceType::FILESYSTEM;
+    op.ip = QHostAddress("10.13.37.42");
+    op.pokemon = QByteArray();
+    manager.inject(op);
 
     app.exec();
 }

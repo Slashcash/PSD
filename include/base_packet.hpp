@@ -10,7 +10,8 @@ public:
     enum class Type
     {
         NORMAL,
-        BREPLY
+        BREPLY,
+        PIA
     };
 
     Base_Packet();

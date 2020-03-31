@@ -8,6 +8,46 @@
 Manager::Manager(QObject* parent) : QObject(parent)
 {
     scanning = false;
+    injecting = false;
+}
+
+bool Manager::inject(const InjectOperation& operation)
+{
+    if(injecting)
+    {
+        qCWarning(manager) << "An injection operation is already in progress, stopping it before starting a new one";
+        stopInjection();
+    }
+
+    //TODO: Add a check on pokemon bytearray size and return false if it does not match
+
+    qCInfo(manager) << "Starting a new injection operation for" << operation.ip.toString();
+    injecting = true;
+
+    injectionPokemon = operation.pokemon;
+    injectionIp = operation.ip;
+
+    startScan(operation.interfaceType, operation.interfaceName);
+    emit injectionStarted({injectionIp, interface.data()->type(), interface.data()->name(), injectionPokemon});
+    return true;
+}
+
+void Manager::stopInjection()
+{
+    if(!injecting)
+    {
+        qCWarning(manager) << "Injection stopping requested but no injection is in progress";
+    }
+    else
+    {
+        qCInfo(manager) << "Stopping injection operation on" << injectionIp.toString();
+        keys.clear();
+        injectionPokemon = QByteArray();
+        injectionIp = QHostAddress();
+        injecting = false;
+        stopScan();
+        emit injectionStopped();
+    }
 }
 
 void Manager::onMsgReceived(const QByteArray& theMsg)
@@ -18,22 +58,62 @@ void Manager::onMsgReceived(const QByteArray& theMsg)
     {
         case Base_Packet::Type::NORMAL:
         {
-            msgPtr.reset(new Packet(theMsg));
+            msgPtr.reset(handleNormalPacket(theMsg));
         }
         break;
         case Base_Packet::Type::BREPLY:
         {
-            msgPtr.reset(new Breply_Packet(theMsg));
+            msgPtr.reset(handleBreplyPacket(theMsg));
+        }
+        break;
+        case Base_Packet::Type::PIA:
+        {
+            msgPtr.reset(handlePiaPacket(theMsg));
         }
         break;
         default:
         {
-            msgPtr.reset(new Packet(theMsg));
+            msgPtr.reset(handleNormalPacket(theMsg));
         }
         break;
     }
 
     interface->send(msgPtr.get()->rawData());
+}
+
+Base_Packet* Manager::handleBreplyPacket(const QByteArray& theMsg)
+{
+    Breply_Packet* buffer = new Breply_Packet(theMsg);
+
+    if(buffer->sourceIpAddress() == injectionIp || buffer->destinationIpAddress() == injectionIp)
+    {
+        QHostAddress ip;
+        if(buffer->sourceIpAddress() == injectionIp) { ip = buffer->destinationIpAddress(); }
+        else ip = buffer->sourceIpAddress();
+
+        QByteArray key = buffer->obtainSessionKey();
+
+        auto it = keys.find(ip);
+        if(it == keys.end() || it.value() != key)
+        {
+            qCInfo(manager) << "New session key exchanged with" << ip.toString();
+            emit sessionKeyChanged(ip, key);
+        }
+
+        keys.insert(ip, key);
+    }
+
+    return buffer;
+}
+
+Base_Packet* Manager::handlePiaPacket(const QByteArray& theMsg)
+{
+    return new Packet(theMsg);
+}
+
+Base_Packet* Manager::handleNormalPacket(const QByteArray& theMsg)
+{
+    return new Packet(theMsg);
 }
 
 void Manager::startScan(const Interface::InterfaceType &theType, const QString &theName)
