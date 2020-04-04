@@ -20,7 +20,6 @@ protected:
 
     QByteArray header() const { return Base_Packet::header() + udpHeader; }
     virtual unsigned int udpHeaderStartPos() const final { return udpHeaderStart; }
-    virtual unsigned int udpHeaderSize() const final { return udpHeader.size(); }
 
 private:
     QByteArray udpHeader;

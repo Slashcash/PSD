@@ -6,7 +6,7 @@
 
 #include "log.hpp"
 
-Base_Packet::Base_Packet()
+Base_Packet::Base_Packet() : Data()
 {
 
 }
@@ -21,17 +21,6 @@ Base_Packet::Base_Packet(const QByteArray& theSource)
     else ipSize = 0;
 
     ipHeader = readFromSource(theSource, IP_START_POS, ipSize);
-}
-
-QByteArray Base_Packet::readFromSource(const QByteArray& theSource, const unsigned int theStartPos, const unsigned int theSize) const
-{
-    if(theSource.size() - theStartPos < theSize)
-    {
-        qCWarning(packet) << "Trying to read from a malformed packet";
-        return QByteArray();
-    }
-
-    else return theSource.mid(theStartPos, theSize);
 }
 
 QHostAddress Base_Packet::sourceIpAddress() const
@@ -65,27 +54,6 @@ QByteArray Base_Packet::sourceMacAddress() const
 QByteArray Base_Packet::destinationMacAddress() const
 {
     return readFromSource(ethHeader, MAC_DST_POS, MAC_ADDRESS_SIZE);
-}
-
-bool Base_Packet::writeToFile(const QString& thePath) const
-{
-    QFile file(thePath);
-    if(!file.open(QIODevice::WriteOnly))
-    {
-        qCCritical(packet) << "Failed to open file" << thePath;
-        return false;
-    }
-
-    qint64 writtenSize = file.write(rawData());
-    if(writtenSize != rawData().size() || writtenSize == -1)
-    {
-        qCCritical(packet) << "Error in writing" << thePath;
-        file.close();
-        return false;
-    }
-
-    file.close();
-    return true;
 }
 
 Base_Packet::Type Base_Packet::evaluateType()

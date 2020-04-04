@@ -13,7 +13,7 @@ QByteArray Breply_Packet::obtainSessionKey() const
     HMAC_CTX* ctx;
     if( (ctx = HMAC_CTX_new()) == nullptr )
     {
-        qCCritical(packetBreply) << "Failed to initialize ctx";
+        qCCritical(crypto) << "Failed to initialize ctx";
         return QByteArray();
     }
 
@@ -26,7 +26,7 @@ QByteArray Breply_Packet::obtainSessionKey() const
     QByteArray sessionParam = modifiedSessionParam();
     if( HMAC_Update(ctx, reinterpret_cast<const unsigned char*>(sessionParam.data()), BREPLY_SESSIONPARAM_SIZE) != 1 )
     {
-        qCCritical(packetBreply) << "Failed to update ctx";
+        qCCritical(crypto) << "Failed to update ctx";
         HMAC_CTX_free(ctx);
         return QByteArray();
     }
@@ -36,7 +36,7 @@ QByteArray Breply_Packet::obtainSessionKey() const
     bufferKey.resize(EVP_MAX_MD_SIZE);
     if( HMAC_Final(ctx, reinterpret_cast<unsigned char*>(bufferKey.data()), &hmacLength) != 1)
     {
-        qCCritical(packetBreply) << "Failed to finalize ctx";
+        qCCritical(crypto) << "Failed to finalize ctx";
         HMAC_CTX_free(ctx);
         return QByteArray();
     }

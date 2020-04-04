@@ -3,7 +3,7 @@ QT += network
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
-INCLUDEPATH += include C:/openssl/include
+INCLUDEPATH += include C:/openssl/include C:/npcap/Include
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -19,12 +19,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     src/base_packet.cpp \
     src/breply_packet.cpp \
+    src/data.cpp \
     src/fs_interface.cpp \
     src/interface.cpp \
     src/log.cpp \
     src/main.cpp \
     src/manager.cpp \
     src/packet.cpp \
+    src/pia_msg.cpp \
+    src/pia_packet.cpp \
     src/udp_packet.cpp
 
 # Default rules for deployment.
@@ -35,11 +38,14 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     include/base_packet.hpp \
     include/breply_packet.hpp \
+    include/data.hpp \
     include/fs_interface.hpp \
     include/interface.hpp \
     include/log.hpp \
     include/manager.hpp \
     include/packet.hpp \
+    include/pia_msg.hpp \
+    include/pia_packet.hpp \
     include/udp_packet.hpp
 
 LIBS += -LC:/openssl/lib -lssl -lcrypto

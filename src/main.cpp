@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
     op.interfaceType = Interface::InterfaceType::FILESYSTEM;
     op.ip = QHostAddress("10.13.37.42");
     op.pokemon = QByteArray();
+    op.netmask = 16;
     manager.inject(op);
 
     app.exec();

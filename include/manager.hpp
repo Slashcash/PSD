@@ -6,6 +6,7 @@
 #include <QScopedPointer>
 #include <QTimer>
 #include <QPair>
+#include <QTimer>
 
 #include "interface.hpp"
 #include "base_packet.hpp"
@@ -18,6 +19,7 @@ public:
     struct InjectOperation
     {
         QHostAddress ip;
+        unsigned int netmask;
         Interface::InterfaceType interfaceType;
         QString interfaceName;
         QByteArray pokemon;
@@ -28,21 +30,28 @@ public:
 
     Manager& operator=(const Manager& theManager) = delete;
 
-    bool inject(const InjectOperation& operation);
+    bool inject(const InjectOperation& theOperation);
     void stopInjection();
 
 signals:
-    void injectionStarted(const InjectOperation& injection);
+    void injectionStarted(const InjectOperation& theOperation);
     void injectionStopped();
-    void sessionKeyChanged(const QHostAddress& address, const QByteArray& key);
+    void sessionKeyChanged(const QHostAddress& theAddress, const QByteArray& theKey);
+    void tradeStarted(const QHostAddress& theAddress);
+    void tradeIntercepted(const QHostAddress& theAddress);
+    void tradeStopped();
+    void tradeInterrupted();
 
 private slots:
     void onMsgReceived(const QByteArray& theMsg);
 
 private:
+    static constexpr int tradeKeepAlive = 2000;
+
     void startScan(const Interface::InterfaceType& theType, const QString& theName);
     void stopScan();
-
+    void stopTrade();
+    QHostAddress broadcast() const;
     Base_Packet* handleBreplyPacket(const QByteArray& theMsg);
     Base_Packet* handleNormalPacket(const QByteArray& theMsg);
     Base_Packet* handlePiaPacket(const QByteArray& theMsg);
@@ -52,8 +61,11 @@ private:
     QHash<const QHostAddress, QByteArray> keys;
     QByteArray injectionPokemon;
     QHostAddress injectionIp;
+    unsigned int injectionNetmask;
     bool scanning;
     bool injecting;
+    QHostAddress activeTrade;
+    QTimer tradeTimer;
 };
 
 #endif // MANAGER_HPP

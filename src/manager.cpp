@@ -1,17 +1,28 @@
 #include "manager.hpp"
 
+#include <cmath>
+
 #include "fs_interface.hpp"
 #include "log.hpp"
 #include "packet.hpp"
 #include "breply_packet.hpp"
+#include "pia_packet.hpp"
 
 Manager::Manager(QObject* parent) : QObject(parent)
 {
     scanning = false;
     injecting = false;
+    injectionNetmask = 0;
+    tradeTimer.callOnTimeout([this](){
+        qCWarning(manager) << "Timeout reached for the trade session with" << activeTrade.toString() <<"stopping it now";
+        emit tradeInterrupted();
+        Manager::stopTrade();
+    });
+
+    tradeTimer.setInterval(tradeKeepAlive);
 }
 
-bool Manager::inject(const InjectOperation& operation)
+bool Manager::inject(const InjectOperation& theOperation)
 {
     if(injecting)
     {
@@ -21,14 +32,15 @@ bool Manager::inject(const InjectOperation& operation)
 
     //TODO: Add a check on pokemon bytearray size and return false if it does not match
 
-    qCInfo(manager) << "Starting a new injection operation for" << operation.ip.toString();
+    qCInfo(manager) << "Starting a new injection operation for" << theOperation.ip.toString();
     injecting = true;
 
-    injectionPokemon = operation.pokemon;
-    injectionIp = operation.ip;
+    injectionPokemon = theOperation.pokemon;
+    injectionIp = theOperation.ip;
+    injectionNetmask = theOperation.netmask;
 
-    startScan(operation.interfaceType, operation.interfaceName);
-    emit injectionStarted({injectionIp, interface.data()->type(), interface.data()->name(), injectionPokemon});
+    startScan(theOperation.interfaceType, theOperation.interfaceName);
+    emit injectionStarted({injectionIp, injectionNetmask, interface.data()->type(), interface.data()->name(), injectionPokemon});
     return true;
 }
 
@@ -44,6 +56,8 @@ void Manager::stopInjection()
         keys.clear();
         injectionPokemon = QByteArray();
         injectionIp = QHostAddress();
+        injectionNetmask = 0;
+        activeTrade = QHostAddress();
         injecting = false;
         stopScan();
         emit injectionStopped();
@@ -108,7 +122,47 @@ Base_Packet* Manager::handleBreplyPacket(const QByteArray& theMsg)
 
 Base_Packet* Manager::handlePiaPacket(const QByteArray& theMsg)
 {
-    return new Packet(theMsg);
+    Pia_Packet* buffer = new Pia_Packet(theMsg);
+    if(buffer->destinationIpAddress() == injectionIp || buffer->sourceIpAddress() == injectionIp)
+    {
+        unsigned int packetConnId = buffer->connectionId();
+
+        QHostAddress ip;
+        if(buffer->sourceIpAddress() == injectionIp) { ip = buffer->destinationIpAddress(); }
+        else ip = buffer->sourceIpAddress();
+
+        auto it = keys.find(ip);
+        QByteArray key;
+        it == keys.end() ? key = QByteArray() : key = it.value();
+
+        if(packetConnId == 0)
+        {
+            if(ip == activeTrade) stopTrade();
+        }
+
+        else
+        {
+            if(ip != activeTrade && ip != broadcast())
+            {
+                activeTrade = ip;
+                emit tradeStarted(ip);
+                if(key.isEmpty()) { qCWarning(manager) << "Trade with" << ip.toString() << "started but key has not been intercepted"; }
+                else { qCInfo(manager) << "Trade with" << ip.toString() << "started"; emit tradeIntercepted(ip); }
+            }
+
+            if(!key.isEmpty())
+            {
+                //HERE I WILL INJECT POKEMON
+                buffer->setKey(key);
+            }
+
+            else qCWarning(manager) << "A trade session packet has been received but its key has not been intercepted";
+
+            if(ip == activeTrade) tradeTimer.start();
+        }
+    }
+
+    return buffer;
 }
 
 Base_Packet* Manager::handleNormalPacket(const QByteArray& theMsg)
@@ -157,4 +211,18 @@ void Manager::stopScan()
         interface.reset(nullptr);
         scanning = false;
     }
+}
+
+QHostAddress Manager::broadcast() const
+{
+    auto buffer = QHostAddress::parseSubnet(injectionIp.toString()+"/"+QString::number(injectionNetmask));
+    return QHostAddress(buffer.first.toIPv4Address() | (static_cast<quint32>(pow(2, buffer.second))-1));
+}
+
+void Manager::stopTrade()
+{
+    qCInfo(manager) << "Trade with" << activeTrade.toString() << "stopped";
+    activeTrade = QHostAddress();
+    tradeTimer.stop();
+    emit tradeStopped();
 }

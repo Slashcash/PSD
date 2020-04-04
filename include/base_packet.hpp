@@ -4,7 +4,9 @@
 #include <QByteArray>
 #include <QHostAddress>
 
-class Base_Packet
+#include "data.hpp"
+
+class Base_Packet : public Data
 {
 public:
     enum class Type
@@ -23,15 +25,11 @@ public:
     virtual QHostAddress destinationIpAddress() const final;
     virtual QByteArray sourceMacAddress() const final;
     virtual QByteArray destinationMacAddress() const final;
+    virtual unsigned int size() const final { return headerSize() + payloadSize(); }
 
     virtual QByteArray rawData() const final { return header() + payload(); }
-    virtual bool writeToFile(const QString& thePath) const final;
-
-    virtual ~Base_Packet() {}
 
 protected:
-    virtual QByteArray readFromSource(const QByteArray& theSource, const unsigned int theStartPos, const unsigned int theSize) const final;
-
     static constexpr unsigned int ETH_START_POS = 0;
     static constexpr unsigned int ETH_HEADER_SIZE = 14;
     static constexpr unsigned int IP_START_POS = ETH_START_POS + ETH_HEADER_SIZE;
