@@ -14,12 +14,13 @@ public:
 
     unsigned int connectionId() const;
     void setKey(const QByteArray& theKey);
-    QByteArray rawDecryptedData() const { return header() + decryptedPayload(); }
-    bool writeDecryptedToFile(const QString& thePath) const { return writeSourceToFile(rawDecryptedData(), thePath); }
-    bool saveDecrypted() const { return saveSource(rawDecryptedData()); }
+    QByteArray rawDecryptedData() const;
+    bool writeDecryptedToFile(const QString& thePath) const;
+    bool saveDecrypted() const;
     bool containsPokemon() const;
     bool containsAck() const;
     QByteArray pokemon() const;
+    bool inject(const QByteArray& thePokemon);
 
 protected:
     virtual unsigned int piaHeaderStartPos() const final { return piaHeaderStart; }
@@ -40,7 +41,7 @@ private:
     QByteArray ivPart() const { return readFromSource(piaHeader, PIA_IVPART_POS, PIA_IVPART_SIZE); }
     QByteArray iv() const;
     QByteArray decrypt() const;
-    QByteArray encrypt() const;
+    QByteArray encrypt(QByteArray& theAuthTag) const;
     QByteArray padding() const { return pad; }
     QByteArray decryptedPayload() const;
     unsigned int pokemonPos() const;

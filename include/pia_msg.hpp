@@ -23,6 +23,7 @@ public:
     virtual QByteArray rawData() const final { return header() + payload() + padding(); }
     int containsPokemon() const;
     QByteArray pokemon() const;
+    bool inject(const QByteArray& thePokemon);
 
  private:
     static constexpr unsigned int MSG_FLAG_POS = 0;

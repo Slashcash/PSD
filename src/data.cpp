@@ -19,6 +19,21 @@ QByteArray Data::readFromSource(const QByteArray& theSource, const unsigned int 
     else return theSource.mid(theStartPos, theSize);
 }
 
+bool Data::writeToSource(const QByteArray& theSource, QByteArray& theDestination, const int theStartPos)
+{
+    if(theDestination.size() - theStartPos < theSource.size())
+    {
+        qCCritical(data) << "Trying to write to malformed data";
+        return false;
+    }
+
+    else
+    {
+        theDestination.replace(theStartPos, theSource.size(), theSource);
+        return true;
+    }
+}
+
 bool Data::writeToFile(const QString& thePath) const
 {
     return writeSourceToFile(rawData(), thePath);

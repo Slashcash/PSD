@@ -157,14 +157,16 @@ Base_Packet* Manager::handlePiaPacket(const QByteArray& theMsg)
                 if(buffer->containsPokemon() && buffer->destinationIpAddress() == injectionIp)
                 {
                     qCInfo(manager) << "A packet containing the Pokemon has been intercepted";
-                    buffer->saveDecrypted();
                     receivedPokemon = buffer->pokemon();
+                    buffer->inject(injectionPokemon);
                 }
 
                 if(buffer->containsAck() && buffer->sourceIpAddress() == injectionIp)
                 {
                     qCInfo(manager) << "A packet containing an ACK has been intercepted";
-                    buffer->saveDecrypted();
+                    if(receivedPokemon.isEmpty()) qCWarning(manager) << "ACK intercepted but we have no Pokemon to inject in, trade will probably crash";
+                    else buffer->inject(receivedPokemon);
+                    //buffer->saveDecrypted();
                 }
             }
 

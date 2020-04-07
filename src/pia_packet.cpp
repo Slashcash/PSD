@@ -33,6 +33,24 @@ Pia_Packet::Pia_Packet(const QByteArray& theSource, const QByteArray& theKey)
     setKey(theKey);
 }
 
+QByteArray Pia_Packet::rawDecryptedData() const
+{
+    if(decrypted) return header() + decryptedPayload();
+    else return QByteArray();
+}
+
+bool Pia_Packet::writeDecryptedToFile(const QString& thePath) const
+{
+    if(decrypted) return writeSourceToFile(rawDecryptedData(), thePath);
+    else return false;
+}
+
+bool Pia_Packet::saveDecrypted() const
+{
+    if(decrypted) return saveSource(rawDecryptedData());
+    else return false;
+}
+
 void Pia_Packet::setKey(const QByteArray& theKey)
 {
     key = theKey;
@@ -92,6 +110,7 @@ QByteArray Pia_Packet::decrypt() const
     if( !EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), nullptr, nullptr, nullptr))
     {
         qCCritical(crypto) << "Failed to initialize decryption operation";
+        EVP_CIPHER_CTX_free(ctx);
         return QByteArray();
     }
 
@@ -100,6 +119,7 @@ QByteArray Pia_Packet::decrypt() const
     if( !EVP_DecryptInit_ex(ctx, nullptr, nullptr, reinterpret_cast<const unsigned char*>(key.data()), reinterpret_cast<const unsigned char*>(bufferIv.data())))
     {
         qCCritical(crypto) << "Failed to initialize iv";
+        EVP_CIPHER_CTX_free(ctx);
         return QByteArray();
     }
 
@@ -110,6 +130,7 @@ QByteArray Pia_Packet::decrypt() const
     {
         delete [] plaintext;
         qCCritical(crypto) << "Failed to get plaintext";
+        EVP_CIPHER_CTX_free(ctx);
         return QByteArray();
     }
 
@@ -118,6 +139,7 @@ QByteArray Pia_Packet::decrypt() const
     {
         delete [] plaintext;
         qCCritical(crypto) << "Failed to set the authentication tag";
+        EVP_CIPHER_CTX_free(ctx);
         return QByteArray();
     }
 
@@ -126,6 +148,7 @@ QByteArray Pia_Packet::decrypt() const
     {
         delete [] plaintext;
         qCCritical(crypto) << "Failed to finalize decryption";
+        EVP_CIPHER_CTX_free(ctx);
         return QByteArray();
     }
 
@@ -136,6 +159,77 @@ QByteArray Pia_Packet::decrypt() const
 
     delete [] plaintext;
     return result;
+}
+
+QByteArray Pia_Packet::encrypt(QByteArray& theAuthTag) const
+{
+    if(!decrypted) return QByteArray();
+
+    int len = 0;
+    EVP_CIPHER_CTX* ctx;
+
+    //create context
+    if( !(ctx = EVP_CIPHER_CTX_new()) )
+    {
+        qCCritical(crypto) << "Failed to initialize the context";
+        return QByteArray();
+    }
+
+    //initialize operation
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), nullptr, nullptr, nullptr))
+    {
+        qCCritical(crypto) << "Failed to initialize encryption operation";
+        EVP_CIPHER_CTX_free(ctx);
+        return QByteArray();
+    }
+
+    //initialize key and iv
+    QByteArray ivBuffer = iv();
+    if(1 != EVP_EncryptInit_ex(ctx, nullptr, nullptr, reinterpret_cast<const unsigned char*>(key.data()), reinterpret_cast<const unsigned char*>(ivBuffer.data())))
+    {
+        qCCritical(crypto) << "Failed to initialize iv";
+        EVP_CIPHER_CTX_free(ctx);
+        return QByteArray();
+    }
+
+    //provide message
+    QByteArray msg = decryptedPayload();
+    unsigned char* ciphertext = new unsigned char[msg.size()];
+    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, reinterpret_cast<const unsigned char*>(msg.data()), msg.size()))
+    {
+        delete [] ciphertext;
+        qCCritical(crypto) << "Failed to get ciphertext";
+        EVP_CIPHER_CTX_free(ctx);
+        return QByteArray();
+    }
+
+    //finalize encryption
+    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext, &len))
+    {
+        delete [] ciphertext;
+        qCCritical(crypto) << "Failed to finalize encryption";
+        EVP_CIPHER_CTX_free(ctx);
+        return QByteArray();
+    }
+
+    //get auth tag
+    unsigned char tag[16];
+    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag))
+    {
+        delete [] ciphertext;
+        qCCritical(crypto) << "Failed to get authentication tag";
+        EVP_CIPHER_CTX_free(ctx);
+        return QByteArray();
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    for(unsigned int i = 0; i < 16; i++) theAuthTag.push_back(tag[i]);
+
+    QByteArray finalResult;
+    for(int i = 0; i < msg.size(); i++) finalResult.push_back(ciphertext[i]);
+
+    return finalResult;
 }
 
 QByteArray Pia_Packet::iv() const
@@ -164,12 +258,17 @@ QByteArray Pia_Packet::decryptedPayload() const
 
 bool Pia_Packet::containsPokemon() const
 {
-    int position = pokemonPos();
-    return position == Pia_Msg::MSG_MAGICNUM1_POS || position == Pia_Msg::MSG_MAGICNUM2_POS;
+    if(!decrypted) return false;
+    else
+    {
+        int position = pokemonPos();
+        return position == Pia_Msg::MSG_MAGICNUM1_POS || position == Pia_Msg::MSG_MAGICNUM2_POS;
+    }
 }
 
 bool Pia_Packet::containsAck() const
 {
+    if(!decrypted) return false;
     return pokemonPos() == Pia_Msg::MSG_MAGICNUMACK_POS;
 }
 
@@ -185,12 +284,40 @@ unsigned int Pia_Packet::pokemonPos() const
 
 QByteArray Pia_Packet::pokemon() const
 {
-    QByteArray buffer;
+    if(!decrypted) return QByteArray();
 
+    else
+    {
+        QByteArray buffer;
+
+        for(auto it = messages.begin(); it < messages.end(); it++)
+            if(!(buffer = it->pokemon()).isEmpty())
+                return buffer;
+
+        return QByteArray();
+    }
+}
+
+bool Pia_Packet::inject(const QByteArray& thePokemon)
+{
+    if(!decrypted) return false;
+
+    int position;
+    bool injected = false;
     for(auto it = messages.begin(); it < messages.end(); it++)
-        if(!(buffer = it->pokemon()).isEmpty())
-            return buffer;
+            if((position = it->containsPokemon()) != -1)
+                if(!it->inject(thePokemon)) {
+                    injected = true;
+                    return false;
+                }
 
-    return QByteArray();
+    QByteArray newAuthTag;
+    QByteArray newPayload = encrypt(newAuthTag);
+    if(newPayload.isEmpty()) return false;
+    if(newAuthTag.isEmpty()) return false;
 
+    writeToSource(newAuthTag, piaHeader, PIA_AUTHTAG_POS);
+    encPayload = newPayload;
+
+    return injected;
 }

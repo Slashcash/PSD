@@ -85,3 +85,11 @@ QByteArray Pia_Msg::pokemon() const
     if(buffer.isEmpty()) return QByteArray();
     else return buffer;
 }
+
+bool Pia_Msg::inject(const QByteArray& thePokemon)
+{
+    int position;
+    if((position = containsPokemon()) == -1) return false;
+
+    return writeToSource(thePokemon, payld, position);
+}

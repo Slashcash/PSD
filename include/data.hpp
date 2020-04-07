@@ -18,6 +18,7 @@ public:
 
 protected:
     virtual QByteArray readFromSource(const QByteArray& theSource, const unsigned int theStartPos, const unsigned int theSize) const final;
+    virtual bool writeToSource(const QByteArray& theSource, QByteArray& theDestination, const int theStartPos) final;
     virtual bool writeSourceToFile(const QByteArray& theSource, const QString& thePath) const final;
     virtual bool saveSource(const QByteArray& theSource) const final;
 
