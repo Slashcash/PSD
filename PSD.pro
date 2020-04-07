@@ -26,6 +26,7 @@ SOURCES += \
     src/main.cpp \
     src/manager.cpp \
     src/packet.cpp \
+    src/pcap_interface.cpp \
     src/pia_msg.cpp \
     src/pia_packet.cpp \
     src/udp_packet.cpp
@@ -44,8 +45,9 @@ HEADERS += \
     include/log.hpp \
     include/manager.hpp \
     include/packet.hpp \
+    include/pcap_interface.hpp \
     include/pia_msg.hpp \
     include/pia_packet.hpp \
     include/udp_packet.hpp
 
-LIBS += -LC:/openssl/lib -lssl -lcrypto
+LIBS += -LC:/openssl/lib -lssl -lcrypto -LC:\npcap\Lib\x64 -lwpcap

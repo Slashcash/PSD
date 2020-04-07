@@ -1,8 +1,12 @@
 #include "data.hpp"
 
 #include <QFile>
+#include <QStandardPaths>
+#include <QDateTime>
 
 #include "log.hpp"
+
+const QString Data::savePath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/psd_test";
 
 QByteArray Data::readFromSource(const QByteArray& theSource, const unsigned int theStartPos, const unsigned int theSize) const
 {
@@ -40,4 +44,18 @@ bool Data::writeSourceToFile(const QByteArray& theSource, const QString& thePath
 
     file.close();
     return true;
+}
+
+bool Data::saveSource(const QByteArray& theSource) const
+{
+    if(!saveDir.exists())
+        if(!saveDir.mkpath("."))
+            return false;
+
+    return writeSourceToFile(theSource, saveDir.absolutePath() + "/" + QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd_hh-mm-ss-zzz") + ".bin");
+}
+
+bool Data::save() const
+{
+    return saveSource(rawData());
 }

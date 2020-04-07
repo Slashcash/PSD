@@ -49,7 +49,7 @@ void Pia_Packet::setKey(const QByteArray& theKey)
             messages.push_back(Pia_Msg(buffer, parent));
             parent = &messages.last();
             int newMsgPos = i + messages.last().size();
-            if(newMsgPos == 0)
+            if(messages.last().size() == 0)
             {
                 qCCritical(packetPia) << "packet payload seems to be malformed";
                 return;
@@ -160,4 +160,37 @@ QByteArray Pia_Packet::decryptedPayload() const
     QByteArray payloadBuffer;
     for(int i = 0; i < messages.size(); i++) payloadBuffer += messages[i].rawData();
     return payloadBuffer + padding();
+}
+
+bool Pia_Packet::containsPokemon() const
+{
+    int position = pokemonPos();
+    return position == Pia_Msg::MSG_MAGICNUM1_POS || position == Pia_Msg::MSG_MAGICNUM2_POS;
+}
+
+bool Pia_Packet::containsAck() const
+{
+    return pokemonPos() == Pia_Msg::MSG_MAGICNUMACK_POS;
+}
+
+unsigned int Pia_Packet::pokemonPos() const
+{
+    int position;
+    for(auto it = messages.begin(); it < messages.end(); it++)
+            if((position = it->containsPokemon()) != -1)
+                return position;
+
+    return -1;
+}
+
+QByteArray Pia_Packet::pokemon() const
+{
+    QByteArray buffer;
+
+    for(auto it = messages.begin(); it < messages.end(); it++)
+        if(!(buffer = it->pokemon()).isEmpty())
+            return buffer;
+
+    return QByteArray();
+
 }

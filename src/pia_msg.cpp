@@ -2,6 +2,9 @@
 
 #include <cstring>
 #include <QtEndian>
+#include <QStandardPaths>
+
+#include "log.hpp"
 
 Pia_Msg::Pia_Msg() : Data()
 {
@@ -32,8 +35,8 @@ Pia_Msg::Pia_Msg(const QByteArray& theSource, const Pia_Msg* theParent) : Data()
     {
         QByteArray sizeBuffer = readFromSource(theSource, sizePos, MSG_SIZE_SIZE);
         if(sizeBuffer.isEmpty()) return;
-        std::memcpy(&payldSize, sizeBuffer.data()+1, 1);
-        qToLittleEndian(payldSize);
+        std::memcpy(&payldSize, sizeBuffer.data(), 2);
+        payldSize = qToBigEndian(payldSize);
     }
     else
     {
@@ -51,4 +54,34 @@ Pia_Msg::Pia_Msg(const QByteArray& theSource, const Pia_Msg* theParent) : Data()
     msg_header = headerBuffer;
     payld = payloadBuffer;
     pad = paddingBuffer;
+}
+
+int Pia_Msg::containsPokemon() const
+{
+    quint16 magicNumber;
+    QByteArray buffer = readFromSource(payld, MSG_MAGICNUM_POS, MSG_MAGICNUM_SIZE);
+    if(buffer.isEmpty()) return false;
+    std::memcpy(&magicNumber, buffer.data(), MSG_MAGICNUM_SIZE);
+    magicNumber = qToBigEndian(magicNumber);
+
+    if(magicNumber == MSG_MAGICNUM_1) { return MSG_MAGICNUM1_POS; }
+    else if(magicNumber == MSG_MAGICNUM_2) { return MSG_MAGICNUM2_POS; }
+    else if(magicNumber == MSG_MAGICNUM_ACK) { return MSG_MAGICNUMACK_POS; }
+    else if(payld.size() >= 344)
+    {
+        qCWarning(packetPia) << "A message that may contain a Pokemon has been traded, writing it to file to analyze it further";
+        //save();
+    }
+
+    return -1;
+}
+
+QByteArray Pia_Msg::pokemon() const
+{
+    int position = containsPokemon();
+    if(position == -1) return QByteArray();
+
+    QByteArray buffer = readFromSource(payld, position, POKEMON_SIZE);
+    if(buffer.isEmpty()) return QByteArray();
+    else return buffer;
 }

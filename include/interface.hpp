@@ -16,14 +16,15 @@ public:
 
     enum class InterfaceType
     {
-        FILESYSTEM = 0
+        FILESYSTEM = 0,
+        PCAP
     };
 
     Interface(const Interface& theInterface) = delete;
-    Interface(QObject* parent = nullptr);
+    Interface(const QString& theName, QObject* parent = nullptr);
 
     virtual bool send(const QByteArray theMsg) final;
-    virtual QString name() const = 0;
+    virtual QString name() const final { return interfaceName; }
     virtual InterfaceType type() const = 0;
 
     Interface& operator=(const Interface& theInterface) = delete;
@@ -44,6 +45,8 @@ private slots:
 
 private:
     virtual bool sendEffective(const QByteArray& theMsg) = 0;
+
+    QString interfaceName;
 };
 
 #endif // INTERFACE_HPP

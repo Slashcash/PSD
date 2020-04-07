@@ -16,6 +16,10 @@ public:
     void setKey(const QByteArray& theKey);
     QByteArray rawDecryptedData() const { return header() + decryptedPayload(); }
     bool writeDecryptedToFile(const QString& thePath) const { return writeSourceToFile(rawDecryptedData(), thePath); }
+    bool saveDecrypted() const { return saveSource(rawDecryptedData()); }
+    bool containsPokemon() const;
+    bool containsAck() const;
+    QByteArray pokemon() const;
 
 protected:
     virtual unsigned int piaHeaderStartPos() const final { return piaHeaderStart; }
@@ -30,6 +34,7 @@ private:
     static constexpr unsigned int PIA_AUTHTAG_SIZE = 16;
     static constexpr unsigned int PIA_IVPART_POS = 9;
     static constexpr unsigned int PIA_IVPART_SIZE = 7;
+    static constexpr unsigned int POKEMON_SIZE = Pia_Msg::POKEMON_SIZE;
 
     QByteArray authTag() const { return readFromSource(piaHeader, PIA_AUTHTAG_POS, PIA_AUTHTAG_SIZE); }
     QByteArray ivPart() const { return readFromSource(piaHeader, PIA_IVPART_POS, PIA_IVPART_SIZE); }
@@ -38,6 +43,7 @@ private:
     QByteArray encrypt() const;
     QByteArray padding() const { return pad; }
     QByteArray decryptedPayload() const;
+    unsigned int pokemonPos() const;
 
     QByteArray piaHeader;
     QByteArray encPayload;

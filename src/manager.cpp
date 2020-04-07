@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "fs_interface.hpp"
+#include "pcap_interface.hpp"
 #include "log.hpp"
 #include "packet.hpp"
 #include "breply_packet.hpp"
@@ -40,7 +41,7 @@ bool Manager::inject(const InjectOperation& theOperation)
     injectionNetmask = theOperation.netmask;
 
     startScan(theOperation.interfaceType, theOperation.interfaceName);
-    emit injectionStarted({injectionIp, injectionNetmask, interface.data()->type(), interface.data()->name(), injectionPokemon});
+    emit injectionStarted({injectionIp, injectionNetmask, interface_ptr.data()->type(), interface_ptr.data()->name(), injectionPokemon});
     return true;
 }
 
@@ -92,7 +93,7 @@ void Manager::onMsgReceived(const QByteArray& theMsg)
         break;
     }
 
-    interface->send(msgPtr.get()->rawData());
+    interface_ptr->send(msgPtr.get()->rawData());
 }
 
 Base_Packet* Manager::handleBreplyPacket(const QByteArray& theMsg)
@@ -152,8 +153,19 @@ Base_Packet* Manager::handlePiaPacket(const QByteArray& theMsg)
 
             if(!key.isEmpty())
             {
-                //HERE I WILL INJECT POKEMON
                 buffer->setKey(key);
+                if(buffer->containsPokemon() && buffer->destinationIpAddress() == injectionIp)
+                {
+                    qCInfo(manager) << "A packet containing the Pokemon has been intercepted";
+                    buffer->saveDecrypted();
+                    receivedPokemon = buffer->pokemon();
+                }
+
+                if(buffer->containsAck() && buffer->sourceIpAddress() == injectionIp)
+                {
+                    qCInfo(manager) << "A packet containing an ACK has been intercepted";
+                    buffer->saveDecrypted();
+                }
             }
 
             else qCWarning(manager) << "A trade session packet has been received but its key has not been intercepted";
@@ -178,24 +190,30 @@ void Manager::startScan(const Interface::InterfaceType &theType, const QString &
         stopScan();
     }
 
-    scanning = true;
     qCInfo(manager) << "Starting a new scan operation on" << theName;
 
     switch(theType)
     {
         case Interface::InterfaceType::FILESYSTEM:
         {
-            interface.reset(new FS_Interface(theName));
+            interface_ptr.reset(new FS_Interface(theName));
+        }
+        break;
+        case Interface::InterfaceType::PCAP:
+        {
+            interface_ptr.reset(new PCAP_Interface(theName));
         }
         break;
         default:
         {
             qCWarning(manager) <<  "Unhandled interface type";
+            return;
         }
         break;
     }
 
-    interfaceConnection = connect(interface.data(), &Interface::msgReceived, this, &Manager::onMsgReceived);
+    interfaceConnection = connect(interface_ptr.data(), &Interface::msgReceived, this, &Manager::onMsgReceived);
+    scanning = true;
 }
 
 void Manager::stopScan()
@@ -206,9 +224,9 @@ void Manager::stopScan()
     }
     else
     {
-        qCInfo(manager) << "Stopping scan operation on" << interface->name();
+        qCInfo(manager) << "Stopping scan operation on" << interface_ptr->name();
         disconnect(interfaceConnection);
-        interface.reset(nullptr);
+        interface_ptr.reset(nullptr);
         scanning = false;
     }
 }

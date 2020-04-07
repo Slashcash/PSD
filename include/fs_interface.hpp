@@ -14,7 +14,6 @@ Q_OBJECT
 public:
     explicit FS_Interface(const QString& theFolderPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
 
-    QString name() const;
     InterfaceType type() const { return InterfaceType::FILESYSTEM; }
 
 private slots:
@@ -34,7 +33,6 @@ private:
     QDir rcvDir;
     QTimer timer;
     QStringList fileCache;
-    QString basePath;
 
     bool evaluateDirectoryValidity(const QDir& theDir) const;
     virtual bool sendEffective(const QByteArray& theMsg);

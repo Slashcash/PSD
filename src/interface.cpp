@@ -2,23 +2,25 @@
 
 #include "log.hpp"
 
-Interface::Interface(QObject* parent) : QObject(parent)
+Interface::Interface(const QString& theName, QObject* parent) : QObject(parent)
 {
+    interfaceName = theName;
+
     connect(this, &Interface::msgReceivedEffective, this, &Interface::onMsgReceived);
     connect(this, &Interface::operationStarted, this, &Interface::onOperationStarted);
     connect(this, &Interface::operationEnded, this, &Interface::onOperationEnded);
 
-    qCInfo(interface) << "Starting interface initialization";
+    qCInfo(interfac) << "Starting interface initialization";
 }
 
 bool Interface::send(const QByteArray theMsg)
 {
-    qCInfo(interface) << "Sending" << theMsg.size() << "bytes to" << name();
+    qCInfo(interfac) << "Sending" << theMsg.size() << "bytes to" << name();
 
     operationStarted(OperationType::SEND);
 
     bool ok = sendEffective(theMsg);
-    if(!ok) qCCritical(interface) << "Sending to" << name() << "failed";
+    if(!ok) qCCritical(interfac) << "Sending to" << name() << "failed";
 
     operationEnded(OperationType::SEND, ok);
 
@@ -27,7 +29,7 @@ bool Interface::send(const QByteArray theMsg)
 
 void Interface::onMsgReceived(const QByteArray& theMsg)
 {
-    qCInfo(interface) << "Received" << theMsg.size() << "bytes from" << name();
+    qCInfo(interfac) << "Received" << theMsg.size() << "bytes from" << name();
     emit msgReceived(theMsg);
 }
 
@@ -42,7 +44,7 @@ void Interface::onOperationStarted(const OperationType& theOperationType) const
         break;
         default:
         {
-            qCWarning(interface) << "Unhandled operation type started";
+            qCWarning(interfac) << "Unhandled operation type started";
         }
         break;
     }
@@ -59,7 +61,7 @@ void Interface::onOperationEnded(const OperationType& theOperationType, const bo
         break;
         default:
         {
-            qCWarning(interface) << "Unhandled operation type ended";
+            qCWarning(interfac) << "Unhandled operation type ended";
         }
         break;
     }

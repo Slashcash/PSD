@@ -11,9 +11,8 @@ const QString FS_Interface::defaultRcvDirName = "rcv";
 const QString FS_Interface::filePrefix = "packet_";
 const QString FS_Interface::fileExtension = ".bin";
 
-FS_Interface::FS_Interface(const QString& theFolderPath) : Interface()
+FS_Interface::FS_Interface(const QString& theFolderPath) : Interface(theFolderPath)
 {
-    basePath = theFolderPath;
     bool result = true;
 
     sndDir.setPath(theFolderPath + "/" + defaultDirName + "/" + defaultSndDirName);
@@ -22,7 +21,7 @@ FS_Interface::FS_Interface(const QString& theFolderPath) : Interface()
     result = evaluateDirectoryValidity(sndDir) | evaluateDirectoryValidity(rcvDir);
 
     sndDir.setFilter(QDir::Filter::Files | QDir::Filter::Readable | QDir::Filter::NoDotAndDotDot);
-    sndDir.setNameFilters(QStringList() << "*.bin");
+    sndDir.setNameFilters(QStringList() << "*" + fileExtension);
     sndDir.setSorting(QDir::SortFlag::Name);
 
     rcvDir.setFilter(QDir::Filter::Files | QDir::Filter::Readable | QDir::Filter::NoDotAndDotDot);
@@ -127,9 +126,4 @@ void FS_Interface::onTimeout()
     }
 
     fileCache = newFileList;
-}
-
-QString FS_Interface::name() const
-{
-    return basePath;
 }

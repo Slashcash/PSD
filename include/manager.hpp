@@ -56,7 +56,7 @@ private:
     Base_Packet* handleNormalPacket(const QByteArray& theMsg);
     Base_Packet* handlePiaPacket(const QByteArray& theMsg);
 
-    QScopedPointer<Interface> interface;
+    QScopedPointer<Interface> interface_ptr;
     QMetaObject::Connection interfaceConnection;
     QHash<const QHostAddress, QByteArray> keys;
     QByteArray injectionPokemon;
@@ -66,6 +66,7 @@ private:
     bool injecting;
     QHostAddress activeTrade;
     QTimer tradeTimer;
+    QByteArray receivedPokemon;
 };
 
 #endif // MANAGER_HPP
