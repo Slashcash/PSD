@@ -9,3 +9,4 @@ Q_LOGGING_CATEGORY(manager, "manager");
 Q_LOGGING_CATEGORY(packet, "packet");
 Q_LOGGING_CATEGORY(packetPia, "packet.pia");
 Q_LOGGING_CATEGORY(crypto, "crypto");
+Q_LOGGING_CATEGORY(parsing, "parsing");

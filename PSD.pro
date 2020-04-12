@@ -25,6 +25,7 @@ SOURCES += \
     src/log.cpp \
     src/main.cpp \
     src/manager.cpp \
+    src/options.cpp \
     src/packet.cpp \
     src/pcap_interface.cpp \
     src/pia_msg.cpp \
@@ -45,6 +46,7 @@ HEADERS += \
     include/interface.hpp \
     include/log.hpp \
     include/manager.hpp \
+    include/options.hpp \
     include/packet.hpp \
     include/pcap_interface.hpp \
     include/pia_msg.hpp \
