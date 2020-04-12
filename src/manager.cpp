@@ -8,6 +8,7 @@
 #include "packet.hpp"
 #include "breply_packet.hpp"
 #include "pia_packet.hpp"
+#include "slp_interface.hpp"
 
 Manager::Manager(QObject* parent) : QObject(parent)
 {
@@ -93,7 +94,7 @@ void Manager::onMsgReceived(const QByteArray& theMsg)
         break;
     }
 
-    interface_ptr->send(msgPtr.get()->rawData());
+    interface_ptr->send(msgPtr->rawData());
 }
 
 Base_Packet* Manager::handleBreplyPacket(const QByteArray& theMsg)
@@ -206,6 +207,11 @@ void Manager::startScan(const Interface::InterfaceType &theType, const QString &
             interface_ptr.reset(new PCAP_Interface(theName));
         }
         break;
+        case Interface::InterfaceType::SLP:
+        {
+            interface_ptr.reset(new SLP_Interface(theName));
+        }
+    break;
         default:
         {
             qCWarning(manager) <<  "Unhandled interface type";

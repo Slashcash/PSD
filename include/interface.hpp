@@ -17,7 +17,8 @@ public:
     enum class InterfaceType
     {
         FILESYSTEM = 0,
-        PCAP
+        PCAP,
+        SLP
     };
 
     Interface(const Interface& theInterface) = delete;

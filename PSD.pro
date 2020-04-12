@@ -29,6 +29,7 @@ SOURCES += \
     src/pcap_interface.cpp \
     src/pia_msg.cpp \
     src/pia_packet.cpp \
+    src/slp_interface.cpp \
     src/udp_packet.cpp
 
 # Default rules for deployment.
@@ -48,6 +49,7 @@ HEADERS += \
     include/pcap_interface.hpp \
     include/pia_msg.hpp \
     include/pia_packet.hpp \
+    include/slp_interface.hpp \
     include/udp_packet.hpp
 
 LIBS += -LC:/openssl/lib -lssl -lcrypto -LC:\npcap\Lib\x64 -lwpcap
