@@ -11,11 +11,18 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName(APP_NAME);
     QCoreApplication::setApplicationVersion(APP_VERSION);
 
+    //parsing command line arguments
     int parseError;
     if((parseError = parseArguments(app)) != 0) return parseError;
 
+    //disabling verbous log
     QLoggingCategory::setFilterRules("interface.info = false");
 
+    //enabling/disabling suspicious packet log
+    if(parser.isSet(saveOption)) saveSuspicious = true;
+    else saveSuspicious = false;
+
+    //opening injection file
     QString filePath = parser.value(fileOption);
     QFile file(filePath);
     if(!file.open(QIODevice::ReadOnly))
@@ -24,6 +31,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
+    //setting up operation
     Manager manager;
     Manager::InjectOperation op;
 
@@ -41,7 +49,9 @@ int main(int argc, char *argv[])
 
     op.netmask = 16;
 
+    //starting injection
     manager.inject(op);
 
+    //starting app execution
     app.exec();
 }

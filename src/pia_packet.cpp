@@ -7,6 +7,7 @@
 #include <QtEndian>
 
 #include "log.hpp"
+#include "options.hpp"
 
 Pia_Packet::Pia_Packet() : Udp_Packet()
 {
@@ -276,8 +277,8 @@ unsigned int Pia_Packet::pokemonPos() const
 {
     int position;
     for(auto it = messages.begin(); it < messages.end(); it++)
-            if((position = it->containsPokemon()) != -1)
-                return position;
+        if((position = it->containsPokemon()) != -1) return position;
+        else if(saveSuspicious && it->size() >= Pia_Msg::POKEMON_SIZE) save();
 
     return -1;
 }

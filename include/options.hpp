@@ -13,6 +13,9 @@ extern QCommandLineOption addressOption;
 extern QCommandLineOption typeOption;
 extern QCommandLineOption nameOption;
 extern QCommandLineOption fileOption;
+extern QCommandLineOption saveOption;
+
+extern bool saveSuspicious;
 
 int parseArguments(QCoreApplication& app);
 

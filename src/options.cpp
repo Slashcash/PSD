@@ -8,6 +8,7 @@ const QString APP_DESCTRIPTION = "A MITM attack to Pokemon Sw/Sh LAN Mode";
 const QString APP_VERSION = "0.1";
 
 QCommandLineParser parser;
+bool saveSuspicious;
 
 QCommandLineOption addressOption(QStringList() << "a" << "address",
                    QCoreApplication::translate("main", "Specify the Nintendo Switch ip <address>."),
@@ -25,6 +26,9 @@ QCommandLineOption fileOption(QStringList() << "i" << "input",
                    QCoreApplication::translate("main", "Specify the input <file> path."),
                    QCoreApplication::translate("main", "file"));
 
+QCommandLineOption saveOption(QStringList() << "s" << "save",
+                    QCoreApplication::translate("main", "Save suspicious packets for debug purposes."));
+
 int parseArguments(QCoreApplication& app)
 {
     parser.setApplicationDescription(APP_DESCTRIPTION);
@@ -39,6 +43,8 @@ int parseArguments(QCoreApplication& app)
     parser.addOption(nameOption);
 
     parser.addOption(fileOption);
+
+    parser.addOption(saveOption);
 
     //processing
     parser.process(app);
