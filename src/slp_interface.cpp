@@ -54,6 +54,7 @@ void SLP_Interface::onReadyRead()
     QByteArray buffer;
     buffer.resize(socket.bytesAvailable());
     socket.readDatagram(buffer.data(), MAX_PACKET_SIZE);
+
     if(buffer.size() != 0) emit msgReceivedEffective(buffer);
 }
 
