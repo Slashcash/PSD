@@ -67,11 +67,6 @@ int Pia_Msg::containsPokemon() const
     if(magicNumber == MSG_MAGICNUM_1) { return MSG_MAGICNUM1_POS; }
     else if(magicNumber == MSG_MAGICNUM_2) { return MSG_MAGICNUM2_POS; }
     else if(magicNumber == MSG_MAGICNUM_ACK) { return MSG_MAGICNUMACK_POS; }
-    else if(payld.size() >= 344)
-    {
-        qCWarning(packetPia) << "A message that may contain a Pokemon has been traded, writing it to file to analyze it further";
-        //save();
-    }
 
     return -1;
 }

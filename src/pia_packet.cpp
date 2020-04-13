@@ -278,7 +278,7 @@ unsigned int Pia_Packet::pokemonPos() const
     int position;
     for(auto it = messages.begin(); it < messages.end(); it++)
         if((position = it->containsPokemon()) != -1) return position;
-        else if(saveSuspicious && it->size() >= Pia_Msg::POKEMON_SIZE) save();
+        else if(saveSuspicious && it->size() >= Pia_Msg::POKEMON_SIZE) { qCInfo(packetPia) << "Intercepted a suspicious packet, saving it"; saveDecrypted(); }
 
     return -1;
 }
