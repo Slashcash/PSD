@@ -32,7 +32,23 @@ bool Manager::inject(const InjectOperation& theOperation)
         stopInjection();
     }
 
-    //TODO: Add a check on pokemon bytearray size and return false if it does not match
+    if(theOperation.pokemon.size() != Pia_Msg::POKEMON_SIZE)
+    {
+        qCCritical(manager) << "Pokemon size is incorrect, impossible to inject";
+        return false;
+    }
+
+    if(theOperation.ip.protocol() != QAbstractSocket::NetworkLayerProtocol::IPv4Protocol)
+    {
+        qCCritical(manager) << "IP seems to be not valid";
+        return false;
+    }
+
+    if(theOperation.netmask > 32)
+    {
+        qCCritical(manager) << "Netmask seems to be not valid";
+        return false;
+    }
 
     qCInfo(manager) << "Starting a new injection operation for" << theOperation.ip.toString();
     injecting = true;
@@ -214,8 +230,8 @@ void Manager::startScan(const Interface::InterfaceType &theType, const QString &
     break;
         default:
         {
-            qCWarning(manager) <<  "Unhandled interface type";
-            return;
+            qCWarning(manager) <<  "Unhandled interface type, reverting back to the standard interface";
+            interface_ptr.reset(new SLP_Interface(theName));
         }
         break;
     }
