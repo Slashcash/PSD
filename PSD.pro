@@ -3,7 +3,7 @@ QT += network
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
-INCLUDEPATH += include C:/openssl/include C:/npcap/Include
+INCLUDEPATH += include
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -54,4 +54,4 @@ HEADERS += \
     include/slp_interface.hpp \
     include/udp_packet.hpp
 
-LIBS += -LC:/openssl/lib -lssl -lcrypto -LC:\npcap\Lib\x64 -lwpcap
+LIBS += -lssl -lcrypto -lwpcap
